@@ -48,6 +48,10 @@ async function run() {
             const result = await ordersCollection.find(query).toArray();
             res.json(result);
         })
+        app.get('/allOrders', async (req, res) => {
+            const result = await ordersCollection.find({}).toArray();
+            res.json(result);
+        })
 
         app.get('/placeOrder/:id', async (req, res) => {
             const id = req.params.id;
@@ -77,7 +81,8 @@ async function run() {
         //users review 
 
         app.post('/reviews', async (req, res) => {
-            console.log(req.body);
+            const result = await reviewsCollection.insertOne(req.body);
+            res.json(result);
         })
 
         app.put('/users', async (req, res) => {
