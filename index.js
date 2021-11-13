@@ -23,12 +23,15 @@ async function run() {
         const productsCollection = database.collection("products");
         const ordersCollection = database.collection("orders");
         const reviewsCollection = database.collection("reviews");
-        // create a document to insert
 
         //get all products
         app.get('/allProducts', async (req, res) => {
             const cursor = await productsCollection.find({}).toArray();
-            res.json(cursor)
+            res.json(cursor);
+        })
+        app.get('/reviews', async (req, res) => {
+            const cursor = await reviewsCollection.find({}).toArray();
+            res.json(cursor);
         })
 
         app.get('/users/:email', async (req, res) => {
@@ -95,11 +98,29 @@ async function run() {
             // console.log(result);
             res.json(result);
         })
+        //update status to shipped by admin
+        app.put('/orders/:id', async (req, res) => {
+            const orders = req.params.id;
+            const filter = { _id: ObjectId(orders) };
+            const updateDoc = { $set: { status: 'shipped' } };
+            const result = await ordersCollection.updateOne(filter, updateDoc);
+            res.json(result);
+        })
 
+        //delete order by user and admin
         app.delete('/orders/:id', async (req, res) => {
             const query = req.params.id;
+            console.log(query);
             const result = await ordersCollection.deleteOne({ _id: ObjectId(query) });
             console.log(result);
+            res.json(result);
+        })
+
+        //delete products by admin
+        app.delete('/products', async (req, res) => {
+            const id = req.query.id;
+            const query = { _id: ObjectId(id) };
+            const result = await productsCollection.deleteOne(query);
             res.json(result);
         })
 
