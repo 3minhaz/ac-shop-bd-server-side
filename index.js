@@ -26,6 +26,15 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function verifyToken(req, res, next) {
     if (req?.headers?.authorization?.startsWith('Bearer ')) {
         const token = req.headers.authorization.split(' ')[1];
+
+
+        try {
+            const decodedUser = await admin.auth().verifyIdToken(token);
+            req.decodedEmail = decodedUser.email;
+        }
+        catch {
+
+        }
     }
     next();
 }
@@ -104,16 +113,26 @@ async function run() {
             res.json(result);
         })
 
-        app.put('/users', async (req, res) => {
+        app.put('/users', verifyToken, async (req, res) => {
             const user = req.body;
-            console.log(req.headers.authorization)
-            const filter = { email: user.email };
-            const updateDoc = {
-                $set: { role: 'admin' }
+            const requester = req.decodedEmail;
+            if (requester) {
+                const requestAccount = await usersCollection.findOne({ email: requester });
+                if (requestAccount.role === 'admin') {
+                    const filter = { email: user.email };
+                    const updateDoc = {
+                        $set: { role: 'admin' }
+                    }
+                    const result = await usersCollection.updateOne(filter, updateDoc);
+                    res.json(result);
+                }
+                else {
+                    res.status(401).json({ message: 'you do not have permission ' });
+                }
             }
-            const result = await usersCollection.updateOne(filter, updateDoc);
+
             // console.log(result);
-            res.json(result);
+
         })
         //update status to shipped by admin
         app.put('/orders/:id', async (req, res) => {
