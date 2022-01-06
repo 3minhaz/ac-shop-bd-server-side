@@ -2,9 +2,18 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const admin = require("firebase-admin");
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const ObjectId = require('mongodb').ObjectId;
+
+// ac-shop-bd-firebase-adminsdk
+
+const serviceAccount = require("./ac-shop-bd-firebase-adminsdk.json");
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
 
 const port = process.env.PORT || 5000;
 
@@ -13,6 +22,13 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qq0tl.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+async function verifyToken(req, res, next) {
+    if (req?.headers?.authorization?.startsWith('Bearer ')) {
+        const token = req.headers.authorization.split(' ')[1];
+    }
+    next();
+}
 
 async function run() {
     try {
@@ -90,6 +106,7 @@ async function run() {
 
         app.put('/users', async (req, res) => {
             const user = req.body;
+            console.log(req.headers.authorization)
             const filter = { email: user.email };
             const updateDoc = {
                 $set: { role: 'admin' }
